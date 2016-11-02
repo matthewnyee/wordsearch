@@ -1,14 +1,15 @@
-/////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // Matt Yee
-// 3 Nov 2016
+// 2 Nov 2016
 // New Beginnings Theory II
 // Programming Assignment 3
 // ws1.c
-/////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // Word search game
-// Code copied from Chong Kim (https://github.com/chongkim/wordsearch/blob/master/c/wordsearch.c)
 // Comments written by Matt Yee
-/////////////////////////////////////
+// Code otherwise copied from Chong Kim for educational purposes
+// https://github.com/chongkim/wordsearch/blob/master/c/wordsearch.c
+///////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,36 +19,46 @@
 char *read_file(char *filename)
 {
   FILE *fp = fopen(filename, "r");
-  fseek(fp, 0, SEEK_END);
-  long fsize = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  char *buf = malloc(fsize+1);
-  fread(buf, 1, fsize, fp);
-  buf[fsize] = 0;
+  fseek(fp, 0, SEEK_END);	// zero offset from end
+  long fsize = ftell(fp);	// position of end of file (in bites)
+  fseek(fp, 0, SEEK_SET);	// reset file "back to beginning"
+  char *buf = malloc(fsize+1);	// + 1 for null character
+  fread(buf, 1, fsize, fp);	// 1 character, fsize # of times
+  buf[fsize] = 0;		// does this add null char???
   fclose(fp);
   return buf;
 }
 
 struct data_t {
   char **grid;
-  int gridlen;
+  int gridlen;		// # of rows
   char **words;
-  int wordslen;
+  int wordslen;		// # of  words
 };
 
 void parse_data(char *buf, struct data_t *data)
 {
   int size = 1;
   char *b = buf;
+
+// parsing word grid
   data->grid = NULL;
   data->gridlen = 0;
+	// for loop:
+	// start: updates buf to continue onto next line?
+	// end: as long as string is not empty
+	// step: "continue"
   for (char *s = strsep(&b, "\n"); s != NULL && *s; s = strsep(&b, "\n")) {
     if (data->gridlen % size == 0)
       data->grid = realloc(data->grid, sizeof(char*)*(data->gridlen + size));
     data->grid[data->gridlen++] = s;
   }
+
+
+// parsing words to search
   data->words = NULL;
   data->wordslen = 0;
+// search for commas,	 stop when hit end of string (NULL)
   for (char *s = strsep(&b, ","); s != NULL; s = strsep(&b, ",")) {
     while (isspace(*s))
       s++;
@@ -91,7 +102,7 @@ void search(struct data_t data, int row, int col, char *word, struct rc_t *path)
 
 int main(int argc, char *argv[])
 {
-  char *buf = read_file(argv[1]);
+  char *buf = read_file(argv[1]);	// reads in file
   struct data_t data;
   parse_data(buf, &data);
 
@@ -104,12 +115,12 @@ int main(int argc, char *argv[])
     }
   }
   for (int row = 0; row < data.gridlen; ++row) {
-    int len = strlen(data.grid[row]);
-    char *sep = "";
+    int len = strlen(data.grid[row]);//if this in the for loop param would execute every time
+    char *sep = "";			// first time around, separate on nothing ("")
     for (int col = 0; col < len; ++col) {
       char ch = data.grid[row][col];
-      printf("%s%c", sep, ch & 0x80 ? ch & 0x7f : '.');
-      sep = " ";
+      printf("%s%c", sep, ch & 0x80 ? ch & 0x7f : '.'); // bitwise and?
+      sep = " ";			// for rest of loop, separate on " "
     }
     puts("");
   }
@@ -120,6 +131,6 @@ int main(int argc, char *argv[])
     sep = ", ";
   }
   puts("");
-  free(buf);
+  free(buf);	// free memory allocated to buf (in function read_file)
   return 0;
 }
